@@ -1,0 +1,205 @@
+---
+title: "Put a real title here"
+subtitle: "SDS 192: MP3"
+author: 
+- name: Author One
+  affiliation: Smith College
+- name: Author Two
+  affiliation: Smith College
+date: "`r format(Sys.Date(), '%B %e, %Y')`"
+output: 
+  html_document:
+    toc: true
+    toc_depth: 2
+    toc_float: true
+    fig_width: 10
+    fig_height: 6
+    fig_caption: true
+    theme: lumen
+    df_print: paged
+    code_folding: show
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  message = FALSE,
+  echo = TRUE,
+  warning = FALSE
+)
+library(tidyverse)
+library(sds192)
+library(babynames)
+```
+
+## Instructions
+
+> READ THE INSTRUCTIONS: https://beanumber.github.io/sds192/mod_babynames.html
+
+Your goal in Step 1 is to recreate this data graphic as closely as you can:
+
+![](https://beanumber.github.io/sds192/gfx/jessie.png)
+
+## Step 1: Make the plot for "Jessie"
+
+### Step 1A: Gather the data for "Jessie"
+
+```{r jessie-data}
+jessie <- babynames %>%
+  filter(
+    name == "Jessie", 
+    year >= 1930 & year < 2012
+  ) %>%
+  select(-prop) %>%
+  pivot_wider(names_from = sex, values_from = n) %>%
+  mutate(pct_girls = F / (F + M))
+jessie
+```
+
+### Step 1B: Compute the "most unisex year"
+
+```{r jessie-year}
+jessie_unisex_year <- jessie %>%
+  mutate(distance = abs(pct_girls - 0.5)) %>%
+  arrange(distance) %>%
+  head(1)
+jessie_unisex_year
+```
+
+
+### Step 1C: Add the annotations for "Jessie"
+
+```{r jessie-context}
+jessie_context <- tribble(
+  ~year_label, ~vpos, ~hjust, ~name, ~text,
+  1934, 0.35, "left", "Jessie", "Most\nunisex year"
+)
+
+jessie_segments <- tribble(
+  ~year, ~pct_girls, ~name,
+  1940, 0.43, "Jessie",
+  1940, 0.5, "Jessie",
+  1949, 0.4956897, "Jessie"
+)
+
+jessie_labels <- tribble(
+  ~year, ~name, ~pct_girls, ~label,
+  1998, "Jessie", 0.8, "BOYS",
+  1998, "Jessie", 0.2, "GIRLS"
+)
+```
+
+### Step 1D: Draw the plot for "Jessie"
+
+```{r jessie-plot}
+ggplot(jessie, aes(x = year, y = pct_girls)) +
+  geom_line() +
+  geom_area(fill = "#eaac9e") +
+  geom_point(data = jessie_unisex_year, fill = "white", pch = 21, size = 3) +
+  geom_path(data = jessie_segments) +
+  geom_text(
+    data = jessie_labels, 
+    aes(label = label), 
+    color = "white"
+  ) +
+  geom_text(
+    data = jessie_context, family = "Century Gothic",
+    aes(x = year_label, y = vpos, label = text, hjust = hjust), vjust = "top"
+  ) +
+  scale_y_continuous(NULL, 
+    limits = c(0, 1),
+    labels = scales::percent
+  ) +
+  scale_x_continuous(NULL) +
+  scale_fill_manual(values = c("#eaac9e", "black")) +
+  theme(
+    panel.background = element_rect(fill = "#92bdd3"),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    text = element_text(family = "Century Gothic"),
+    strip.background = element_blank(),
+    strip.text = element_text(hjust = 0, face = "bold", size = 14)
+  ) +
+  guides(fill = FALSE) +
+  labs(
+    title = "1. Jessie", 
+    caption = "Source: Social Security Administration | By http://flowingdata.com"
+  )
+```
+
+## Step 2: Make the graphic for all 35 names
+
+Make [the full data graphic](https://i2.wp.com/flowingdata.com/wp-content/uploads/2013/09/most-unisex-names2.png?w=2000) with the 35 most gender-neutral names:
+
+![](https://i2.wp.com/flowingdata.com/wp-content/uploads/2013/09/most-unisex-names2.png?w=2000)
+
+Or at least, make an attempt that's as good as mine:
+
+![](https://beanumber.github.io/sds192/gfx/my_babynames.png)
+
+> Note: Please do **NOT** obsess about making this perfect. It probably can't be done! Just give it your best shot!
+
+This bit of code will create a data frame with the 35 names as ranked by FlowingData.com. You can use this to check your work, but note that to meet the standard for *computing* the names, you need to discover these names algorithmically. 
+
+```{r}
+fd_names <- c(
+  "Jessie", "Marion", "Jackie", "Alva", "Ollie",
+  "Jody", "Cleo", "Kerry", "Frankie", "Guadalupe",
+  "Carey", "Tommie", "Angel", "Hollis", "Sammie",
+  "Jamie", "Kris", "Robbie", "Tracy", "Merrill",
+  "Noel", "Rene", "Johnnie", "Ariel", "Jan",
+  "Devon", "Cruz", "Michel", "Gale", "Robin",
+  "Dorian", "Casey", "Dana", "Kim", "Shannon"
+) %>%
+  enframe(name = "fd_rank", value = "name")
+```
+
+### Step 2A: Compute the RMSE for Jessie
+
+```{r}
+jessie %>%
+  mutate(
+    error = pct_girls - 0.5,
+    squared_error = error^2
+  ) %>%
+  summarize(
+    mse = mean(squared_error),
+    rmse = sqrt(mse)
+  )
+```
+
+### Step 2B: Compute the RMSE for all names
+
+
+### Step 2C: Rank and filter the list of names
+
+### Step 2D: Gather the data you need to draw the time series
+
+### Step 2E: Gather the data you need to draw the points
+
+### Step 2F: Polish the data
+
+### Step 2G: Create the annotations
+
+> Hint: Read [the section in the book about customizing **gplot2** graphics](https://mdsr-book.github.io/mdsr2e/ch-vizIII.html#sec:themes)
+
+### Step 2H: Order the facets
+
+### Step 2I: Draw the plot
+
+## Word count
+
+```{r word_count, message=FALSE, echo=FALSE}
+text_stats()
+```
+
+## Standards
+
+In this assignment, we attempted the following [standards](https://beanumber.github.io/sds192/standards.html):
+
+- `r standard_button("wrangling")`: We met the Wrangling standard because we...
+- `r standard_button("relational")`: We met the Relational standard because we...
+- `r standard_button("reshape")`: We met the Reshape standard because we...
+- `r standard_button("aesthetics")`: We mastered the Aesthetics standard because we...
+- `r standard_button("markdown")`: We mastered the R Markdown standard because we...
+
+## References

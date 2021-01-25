@@ -1,0 +1,17 @@
+---
+title: "sds192-mp3"
+output:
+  github_document:
+    html_preview: false
+---
+
+Mini-project 3:
+
+See (https://beanumber.github.io/sds192/mod_babynames.html) for the project instructions
+
+
+```{r, eval=TRUE, message=FALSE}
+library(tidyverse)
+# install.packages("babynames")
+library(babynames)
+```
